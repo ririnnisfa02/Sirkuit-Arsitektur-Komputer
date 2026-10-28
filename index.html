@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sirkuit — Belajar Arsitektur Komputer Von Neumann</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#f4f3ec;--ink:#14231f;--muted:#55645f;--pcb:#0e5a47;--dark:#0a3d31;--cu:#d9822b;--mint:#d7ebe2;--line:#d9d8cc;--ok:#1f8a54;--bad:#c2410c}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth;scroll-padding-top:70px}
+body{font-family:"DM Sans",system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.65;font-size:16px}
+h1,h2,h3{font-family:"Space Grotesk","DM Sans",sans-serif;line-height:1.2}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer}
+.wrap{max-width:1040px;margin:0 auto;padding:0 18px}
+:focus-visible{outline:3px solid var(--cu);outline-offset:2px}
+
+header{position:sticky;top:0;z-index:10;background:var(--dark);color:#fff}
+header .wrap{display:flex;align-items:center;justify-content:space-between;height:58px}
+.brand{display:flex;align-items:center;gap:10px;font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:20px}
+header nav{display:flex;gap:4px}
+header nav a{padding:6px 12px;border-radius:8px;font-size:14px;color:#cfe5db}
+header nav a:hover{background:rgba(255,255,255,.1);color:#fff}
+
+.hero{background:var(--dark);color:#fff;padding:44px 0 90px;background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:28px 28px}
+.hero .wrap{display:grid;grid-template-columns:1fr 1.05fr;gap:36px;align-items:center}
+.hero h1{font-size:clamp(30px,5vw,46px);margin-bottom:14px}
+.hero p{color:#cfe5db;max-width:440px;margin-bottom:22px}
+.cta{display:flex;gap:10px;flex-wrap:wrap}
+.btn{display:inline-block;padding:11px 20px;border-radius:10px;border:2px solid var(--cu);font-weight:700;font-size:15px;background:var(--cu);color:#1b1206}
+.btn.line{background:transparent;color:#fff}
+.btn:hover{filter:brightness(1.08)}
+svg{width:100%;height:auto;display:block}
+.node{cursor:pointer}
+.node rect{fill:rgba(255,255,255,.07);stroke:#8fc7b0;stroke-width:2;transition:fill .2s}
+.node text{fill:#fff;font:700 15px "Space Grotesk",sans-serif;text-anchor:middle;pointer-events:none}
+.node:hover rect{fill:rgba(255,255,255,.16)}
+.node.on rect{fill:var(--cu);stroke:var(--cu)}
+.node.on text{fill:#1b1206}
+.wire{stroke:#8fc7b0;stroke-width:2;fill:none}
+.tip{background:#fff;color:var(--ink);border-radius:12px;padding:14px 16px;margin-top:10px;border-left:6px solid var(--cu);min-height:96px}
+.tip b{font-family:"Space Grotesk",sans-serif;font-size:17px}
+.tip p{color:var(--muted);margin:2px 0 0;font-size:14.5px;max-width:none}
+
+.info{margin-top:-56px;position:relative}
+.info dl{display:grid;grid-template-columns:repeat(4,1fr);background:#fff;border-radius:16px;box-shadow:0 8px 28px rgba(10,61,49,.18);overflow:hidden}
+.info div{padding:16px 18px;border-right:1px solid var(--line)}
+.info div:last-child{border:0}
+.info dt{font-size:12.5px;color:var(--muted)}
+.info dd{font-weight:700;font-size:15px}
+
+section.blk{padding:56px 0 0}
+section.blk>.wrap>h2{font-size:28px;margin-bottom:6px}
+.sub{color:var(--muted);margin-bottom:20px}
+
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:16px}
+.tabs button{white-space:nowrap;padding:8px 16px;border-radius:999px;border:1.5px solid var(--line);background:#fff;font-weight:500;font-size:14px}
+.tabs button[aria-selected=true]{background:var(--pcb);border-color:var(--pcb);color:#fff}
+.panel{background:#fff;border-radius:16px;padding:24px;border:1px solid var(--line)}
+.panel h3{font-size:22px;margin-bottom:8px}
+.panel p+p{margin-top:10px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:16px 0}
+.cards div{background:var(--paper);border-radius:12px;padding:14px;border-top:4px solid var(--pcb)}
+.cards b{display:block;font-family:"Space Grotesk",sans-serif}
+.cards span{font-size:14.5px;color:var(--muted)}
+.note{background:#fff4e5;border-left:5px solid var(--cu);padding:12px 14px;border-radius:8px;margin-top:14px;font-size:15px}
+.panel ol,.panel ul{padding-left:22px;margin-top:8px}
+
+.seg{display:inline-flex;background:#e6e5da;border-radius:12px;padding:4px;margin-bottom:16px}
+.seg button{border:0;background:transparent;padding:9px 18px;border-radius:9px;font-weight:700;font-size:14px;color:var(--muted)}
+.seg button[aria-selected=true]{background:#fff;color:var(--pcb);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.bar{height:8px;background:var(--mint);border-radius:9px;overflow:hidden;margin:8px 0 18px}
+.bar i{display:block;height:100%;background:var(--pcb);transition:width .3s}
+.meta{display:flex;justify-content:space-between;font-size:14px;color:var(--muted)}
+.q{font-size:20px;font-family:"Space Grotesk",sans-serif;font-weight:500;margin-bottom:14px}
+.opt{display:block;width:100%;text-align:left;padding:12px 16px;margin-bottom:8px;border-radius:12px;border:2px solid var(--line);background:#fff;font-size:15.5px}
+.opt:hover:not(:disabled){border-color:var(--pcb)}
+.opt.ok{border-color:var(--ok);background:#e6f6ec}
+.opt.no{border-color:var(--bad);background:#fdece3}
+.fb{margin:10px 0;font-size:15px;color:var(--muted)}
+.big{font-family:"Space Grotesk",sans-serif;font-size:52px;font-weight:700;color:var(--pcb)}
+.match{display:grid;grid-template-columns:1fr 1.4fr;gap:10px 14px}
+.match button{padding:11px 12px;border-radius:12px;border:2px solid var(--line);background:#fff;text-align:left;font-size:14px}
+.match .t{font-weight:700;font-family:"Space Grotesk",sans-serif}
+.match button.sel{border-color:var(--cu);background:#fff4e5}
+.match button.done{border-color:var(--ok);background:#e6f6ec;opacity:.75}
+.match button.bad{border-color:var(--bad);background:#fdece3;animation:sh .3s}
+@keyframes sh{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+.cp{background:#fff;border:1px solid var(--line);border-radius:16px;display:grid;grid-template-columns:230px 1fr;overflow:hidden}
+.cp div{padding:22px}
+.cp .el{background:var(--pcb);color:#fff}
+.cp .el small{opacity:.8}
+.cp .el b{font-family:"Space Grotesk",sans-serif;font-size:19px;display:block;line-height:1.3}
+.cp p{color:var(--muted);font-size:15px}
+
+.fig{margin:14px 0;text-align:center}
+.fig img{max-width:100%;height:auto;border-radius:12px;background:var(--paper)}
+.fig figcaption{font-size:13.5px;color:var(--muted);margin-top:4px}
+.gal{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:14px 0}
+.gal .fig{margin:0}
+.lk{background:var(--pcb);color:#fff;border-radius:16px;padding:26px;display:flex;gap:18px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.lk h3{font-size:22px;margin-bottom:4px}
+.lk p{color:#d7ebe2;max-width:560px}
+footer{margin-top:64px;background:var(--dark);color:#cfe5db;padding:26px 0;font-size:14px}
+footer b{color:#fff}
+
+@media(max-width:780px){
+  .hero .wrap{grid-template-columns:1fr}
+  .info dl{grid-template-columns:1fr 1fr}
+  .info div:nth-child(2){border-right:0}
+  .info div:nth-child(-n+2){border-bottom:1px solid var(--line)}
+  .cp{grid-template-columns:1fr}
+  .panel{padding:18px}
+  header nav a{padding:6px 8px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<header><div class="wrap">
+  <a class="brand" href="#top">
+    <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect x="7" y="7" width="14" height="14" rx="3" fill="none" stroke="#d9822b" stroke-width="2.4"/><path d="M14 7V1M14 27v-6M7 14H1M27 14h-6" stroke="#8fc7b0" stroke-width="2.4" stroke-linecap="round"/></svg>
+    Sirkuit
+  </a>
+  <nav><a href="#materi">Materi</a><a href="#lkpd">LKPD</a><a href="#game">Mini Game</a><a href="#cp">Capaian</a></nav>
+</div></header>
+
+<main id="top">
+<section class="hero"><div class="wrap">
+  <div>
+    <h1>Arsitektur Komputer Von Neumann</h1>
+    <p>Pelajari bagaimana komputer menerima data, memproses instruksi, menyimpan informasi, dan menampilkan hasil. Klik tiap bagian pada diagram untuk mengenalnya.</p>
+    <div class="cta"><a class="btn" href="#materi">Mulai belajar</a><a class="btn line" href="#lkpd">Buka LKPD</a><a class="btn line" href="#game">Main kuis</a></div>
+  </div>
+  <div>
+    <svg viewBox="0 0 440 215" role="group" aria-label="Diagram arsitektur Von Neumann">
+      <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#8fc7b0"/></marker></defs>
+      <path class="wire" d="M110 150H156" marker-end="url(#ar)"/>
+      <path class="wire" d="M280 150H326" marker-end="url(#ar)"/>
+      <path class="wire" d="M220 59V91" marker-start="url(#ar)" marker-end="url(#ar)"/>
+      <g class="node" data-k="input" tabindex="0" role="button"><rect x="10" y="115" width="100" height="70" rx="10"/><text x="60" y="155">Input</text></g>
+      <g class="node on" data-k="cpu" tabindex="0" role="button"><rect x="160" y="95" width="120" height="110" rx="10"/><text x="220" y="155">CPU</text></g>
+      <g class="node" data-k="memory" tabindex="0" role="button"><rect x="160" y="5" width="120" height="50" rx="10"/><text x="220" y="36">Memori</text></g>
+      <g class="node" data-k="output" tabindex="0" role="button"><rect x="330" y="115" width="100" height="70" rx="10"/><text x="380" y="155">Output</text></g>
+    </svg>
+    <div class="tip" aria-live="polite"><b id="tt"></b><p id="td"></p></div>
+  </div>
+</div></section>
+
+<div class="wrap info"><dl>
+  <div><dt>Penyusun</dt><dd>Ririn Nisfa Sholikhati, S.Pd.</dd></div>
+  <div><dt>Jenjang Sekolah</dt><dd>SMA</dd></div>
+  <div><dt>Fase/Kelas</dt><dd>E / X</dd></div>
+  <div><dt>Mata Pelajaran</dt><dd>Informatika</dd></div>
+</dl></div>
+
+<section class="blk" id="materi"><div class="wrap">
+  <h2>Materi</h2>
+  <p class="sub">Pilih topik untuk membaca ringkasannya.</p>
+  <div class="tabs" role="tablist" id="tabs"></div>
+
+  <div class="panel" data-p="0">
+    <h3>Arsitektur Von Neumann</h3>
+    <p>Arsitektur Von Neumann adalah model dasar arsitektur komputer yang dirancang oleh John von Neumann pada tahun 1945. Model ini menjadi dasar pembahasan komputer modern: <b>Input → CPU ↔ Memori → Output</b>.</p>
+    <div class="gal"><figure class="fig"><img loading="lazy" src="https://dawngoddes.github.io/Arsitektur-Komputer-Von-Neumann/images/photos/01-von-neumann-portrait.svg" alt="Ilustrasi John von Neumann"><figcaption>John von Neumann</figcaption></figure><figure class="fig"><img loading="lazy" src="https://dawngoddes.github.io/Arsitektur-Komputer-Von-Neumann/images/photos/01-von-neumann-architecture.svg" alt="Ilustrasi arsitektur Von Neumann"><figcaption>Input → CPU ↔ Memory → Output</figcaption></figure></div>
+    <div class="cards">
+      <div><b>CPU</b><span>Menjalankan instruksi dan melakukan operasi aritmatika serta logika.</span></div>
+      <div><b>Memori</b><span>Tempat menyimpan data dan instruksi program.</span></div>
+      <div><b>Input</b><span>Memasukkan data ke komputer, misalnya keyboard dan mouse.</span></div>
+      <div><b>Output</b><span>Menampilkan hasil pemrosesan, misalnya monitor dan printer.</span></div>
+    </div>
+    <p><b>Contoh:</b> saat kamu mengetik kalimat, keyboard memasukkan data, komputer memprosesnya, lalu monitor menampilkan hasilnya.</p>
+  </div>
+
+  <div class="panel" data-p="1" hidden>
+    <h3>CPU: pusat pemrosesan</h3>
+    <p>CPU (<i>Central Processing Unit</i>) sering disebut “otak” komputer karena bertugas menjalankan instruksi dari program.</p>
+    <div class="gal"><figure class="fig"><img loading="lazy" src="https://dawngoddes.github.io/Arsitektur-Komputer-Von-Neumann/images/02-cpu.svg" alt="Diagram komponen CPU"><figcaption>Komponen CPU</figcaption></figure><figure class="fig"><img loading="lazy" src="https://dawngoddes.github.io/Arsitektur-Komputer-Von-Neumann/images/photos/02-cpu-komputer.svg" alt="Ilustrasi CPU komputer"><figcaption>Contoh bentuk fisik CPU</figcaption></figure></div>
+    <div class="cards">
+      <div><b>ALU</b><span><i>Arithmetic Logic Unit</i>, melakukan perhitungan dan operasi logika.</span></div>
+      <div><b>Control Unit</b><span>Mengatur alur instruksi yang harus dijalankan.</span></div>
+      <div><b>Register</b><span>Penyimpanan data kecil dan cepat di dalam CPU.</span></div>
+    </div>
+    <div class="note"><b>Bayangkan:</b> ALU seperti bagian yang menghitung, Control Unit seperti pengatur pekerjaan, dan Register seperti tempat kecil untuk menaruh informasi yang sedang dipakai.</div>
+  </div>
+
+  <div class="panel" data-p="2" hidden>
+    <h3>Memori: RAM dan ROM</h3>
+    <p>Memori menyimpan data dan instruksi program.</p>
+    <figure class="fig"><img loading="lazy" src="https://dawngoddes.github.io/Arsitektur-Komputer-Von-Neumann/images/03-memori.svg" alt="Perbandingan RAM dan ROM"><figcaption>Perbandingan RAM dan ROM</figcaption></figure>
+    <div class="cards">
+      <div><b>RAM (sementara)</b><span>Dipakai saat program berjalan. Data hilang ketika komputer dimatikan.</span></div>
+      <div><b>ROM (permanen)</b><span>Menyimpan instruksi dasar yang diperlukan saat komputer dinyalakan (nonvolatile).</span></div>
+      <div><b>HDD dan SSD</b><span>Contoh penyimpanan sekunder yang tetap menyimpan data tanpa listrik.</span></div>
+    </div>
+    <div class="gal"><figure class="fig"><img loading="lazy" src="https://dawngoddes.github.io/Arsitektur-Komputer-Von-Neumann/images/photos/03-ram.svg" alt="Ilustrasi RAM komputer"><figcaption>RAM</figcaption></figure><figure class="fig"><img loading="lazy" src="https://dawngoddes.github.io/Arsitektur-Komputer-Von-Neumann/images/photos/03-rom-chip.svg" alt="Ilustrasi chip ROM"><figcaption>ROM</figcaption></figure><figure class="fig"><img loading="lazy" src="https://dawngoddes.github.io/Arsitektur-Komputer-Von-Neumann/images/photos/03-hdd.svg" alt="Ilustrasi hard disk drive"><figcaption>HDD</figcaption></figure><figure class="fig"><img loading="lazy" src="https://dawngoddes.github.io/Arsitektur-Komputer-Von-Neumann/images/photos/03-ssd.svg" alt="Ilustrasi solid state drive"><figcaption>SSD</figcaption></figure></div>
+    <div class="note"><b>Ingat:</b> RAM bukan tempat menyimpan file secara permanen. HDD dan SSD tidak sama dengan ROM, tetapi sama-sama nonvolatile.</div>
+  </div>
+
+  <div class="panel" data-p="3" hidden>
+    <h3>Perangkat input dan output</h3>
+    <p><b>Input</b> adalah cara komputer menerima data, contohnya keyboard, mouse, scanner, dan microphone.</p>
+    <p><b>Output</b> adalah cara komputer menyampaikan hasil kepada pengguna, contohnya monitor, printer, dan speaker.</p>
+    <figure class="fig"><img loading="lazy" src="https://dawngoddes.github.io/Arsitektur-Komputer-Von-Neumann/images/04-input-output.svg" alt="Diagram input, proses, output"></figure>
+    <div class="note">Alurnya: <b>Input → Proses → Output</b></div>
+  </div>
+
+  <div class="panel" data-p="4" hidden>
+    <h3>Siklus instruksi</h3>
+    <p>Siklus instruksi adalah proses yang dilakukan CPU untuk menjalankan satu instruksi program, dan terjadi berulang kali saat program berjalan.</p>
+    <figure class="fig"><img loading="lazy" src="https://dawngoddes.github.io/Arsitektur-Komputer-Von-Neumann/images/05-fetch-decode-execute.svg" alt="Diagram fetch, decode, execute"><figcaption>Siklus Fetch → Decode → Execute</figcaption></figure>
+    <div class="cards">
+      <div><b>1. Fetch</b><span>CPU mengambil instruksi dari memori dan menyimpannya di register.</span></div>
+      <div><b>2. Decode</b><span>CPU menerjemahkan instruksi agar bisa dipahami bagian yang menjalankannya.</span></div>
+      <div><b>3. Execute</b><span>CPU menjalankan instruksi: menghitung, membandingkan, atau memindahkan data.</span></div>
+      <div><b>Store (opsional)</b><span>Hasil eksekusi disimpan kembali ke memori jika diperlukan.</span></div>
+    </div>
+    <p><b>Contoh:</b> instruksi “Tambah 5 + 3”. CPU mengambil instruksi, menerjemahkannya sebagai penjumlahan, lalu menghitungnya.</p>
+  </div>
+
+  <div class="panel" data-p="5" hidden>
+    <h3>Sistem operasi</h3>
+    <p>Sistem operasi (<i>Operating System</i>/OS) adalah perangkat lunak sistem yang mengelola sumber daya perangkat keras dan perangkat lunak, serta menyediakan layanan bagi program aplikasi. OS menjadi penghubung antara pengguna, aplikasi, dan perangkat keras. Contohnya Windows, macOS, Linux, Android, dan iOS.</p>
+    <figure class="fig"><img loading="lazy" src="https://dawngoddes.github.io/Arsitektur-Komputer-Von-Neumann/images/06-sistem-operasi.svg" alt="Sistem operasi sebagai penghubung"><figcaption>Sistem operasi sebagai penghubung pengguna, aplikasi, dan perangkat keras</figcaption></figure>
+    <div class="gal"><figure class="fig"><img loading="lazy" src="https://dawngoddes.github.io/Arsitektur-Komputer-Von-Neumann/images/os/windows.svg" alt="Ikon Windows"><figcaption>Windows</figcaption></figure><figure class="fig"><img loading="lazy" src="https://dawngoddes.github.io/Arsitektur-Komputer-Von-Neumann/images/os/macos.svg" alt="Ikon macOS"><figcaption>macOS</figcaption></figure><figure class="fig"><img loading="lazy" src="https://dawngoddes.github.io/Arsitektur-Komputer-Von-Neumann/images/os/linux.svg" alt="Ikon Linux"><figcaption>Linux</figcaption></figure></div>
+    <div class="cards">
+      <div><b>Manajemen memori</b><span>Mengatur alokasi RAM untuk program yang berjalan.</span></div>
+      <div><b>Manajemen file</b><span>Mengatur penyimpanan, pengorganisasian, dan penamaan file.</span></div>
+      <div><b>Manajemen proses</b><span>Mengatur penjadwalan dan eksekusi program.</span></div>
+      <div><b>Manajemen input/output</b><span>Mengatur komunikasi perangkat input/output dengan sistem.</span></div>
+      <div><b>Pengguna dan keamanan</b><span>Mengelola akun, hak akses, dan membantu melindungi sistem.</span></div>
+    </div>
+    <figure class="fig"><img loading="lazy" src="https://dawngoddes.github.io/Arsitektur-Komputer-Von-Neumann/images/07-fungsi-os.svg" alt="Tiga fungsi utama sistem operasi"></figure>
+    <div class="gal"><figure class="fig"><img loading="lazy" src="https://dawngoddes.github.io/Arsitektur-Komputer-Von-Neumann/images/functions/07-memory-management.svg" alt="Ilustrasi manajemen memori"><figcaption>Memori</figcaption></figure><figure class="fig"><img loading="lazy" src="https://dawngoddes.github.io/Arsitektur-Komputer-Von-Neumann/images/functions/07-file-management.svg" alt="Ilustrasi manajemen file"><figcaption>File</figcaption></figure><figure class="fig"><img loading="lazy" src="https://dawngoddes.github.io/Arsitektur-Komputer-Von-Neumann/images/functions/07-process-management.svg" alt="Ilustrasi manajemen proses"><figcaption>Proses</figcaption></figure><figure class="fig"><img loading="lazy" src="https://dawngoddes.github.io/Arsitektur-Komputer-Von-Neumann/images/functions/07-io-management.svg" alt="Ilustrasi manajemen input output"><figcaption>Input/Output</figcaption></figure><figure class="fig"><img loading="lazy" src="https://dawngoddes.github.io/Arsitektur-Komputer-Von-Neumann/images/functions/07-security-management.svg" alt="Ilustrasi pengguna dan keamanan"><figcaption>Keamanan</figcaption></figure></div>
+    <p><b>Contoh sehari-hari:</b> saat membuka kamera di smartphone, OS membantu aplikasi memakai kamera, memori, prosesor, dan layar.</p>
+  </div>
+
+  <div class="panel" data-p="6" hidden>
+    <h3>Alur kerja dan ringkasan</h3>
+    <figure class="fig"><img loading="lazy" src="https://dawngoddes.github.io/Arsitektur-Komputer-Von-Neumann/images/08-alur-komputer.svg" alt="Alur kerja komputer"><figcaption>Alur kerja komputer</figcaption></figure>
+    <p>Saat mengetik di keyboard:</p>
+    <ol>
+      <li><b>Input:</b> keyboard menerima ketikanmu.</li>
+      <li><b>Proses:</b> CPU menjalankan fetch, decode, dan execute.</li>
+      <li><b>Memori:</b> data dan instruksi yang diperlukan disimpan sementara di RAM.</li>
+      <li><b>Output:</b> monitor menampilkan hasil.</li>
+      <li><b>Sistem operasi:</b> mengatur proses, memori, file, serta perangkat input/output.</li>
+    </ol>
+    <div class="note"><b>Inti pemahaman:</b> komputer bukan sekadar CPU, melainkan sistem dari banyak komponen yang saling berhubungan.</div>
+    <p style="margin-top:14px"><b>Refleksi:</b> bagaimana data berpindah dari keyboard hingga tampil di monitor? Apa yang terjadi jika komputer tidak punya sistem operasi?</p>
+  </div>
+</div></section>
+
+<section class="blk" id="lkpd"><div class="wrap">
+  <div class="lk">
+    <div><h3>LKPD Computer Detective</h3><p>Lembar kerja interaktif untuk berlatih mengenali komponen komputer dan cara kerjanya melalui aktivitas detektif.</p></div>
+    <a class="btn" href="https://dawngoddes.github.io/Arsitektur-Komputer-Von-Neumann/LKPD_Computer_Detective.html" target="_blank" rel="noopener">Buka LKPD</a>
+  </div>
+</div></section>
+
+<section class="blk" id="game"><div class="wrap">
+  <h2>Mini Game</h2>
+  <p class="sub">Uji pemahamanmu dengan kuis atau permainan mencocokkan.</p>
+  <div class="seg" role="tablist"><button role="tab" aria-selected="true" data-g="quiz">Kuis Kilat</button><button role="tab" aria-selected="false" data-g="match">Pasangkan Komponen</button></div>
+  <div class="panel" id="quiz"></div>
+  <div class="panel" id="match" hidden></div>
+</div></section>
+
+<section class="blk" id="cp"><div class="wrap">
+  <h2>Elemen dan Capaian Pembelajaran</h2>
+  <p class="sub">Capaian pembelajaran Informatika Fase E (Kelas X).</p>
+  <div class="cp">
+    <div class="el"><small>Elemen</small><b>Berpikir Komputasional dan Literasi Digital</b></div>
+    <div><p>Pada akhir Fase E, murid mampu memahami konsep struktur data dan algoritma standar; menerapkan proses komputasi untuk mendapatkan data yang berkualitas; menulis solusi rancangan program dalam pseudocode; memahami model komputer Von Neumann dan peran sistem operasi; memahami penggunaan mesin pencari dengan variabel lebih banyak; mengevaluasi informasi digital dengan membaca lateral; memahami keamanan jaringan dan aplikasi perkantoran; serta menghargai Hak Kekayaan Intelektual dan mengenal profesi di bidang Informatika. Semua upaya tersebut diarahkan untuk membentuk murid yang bernalar kritis, kreatif, mandiri, bergotong royong, dan berakhlak mulia dalam dunia digital.</p></div>
+  </div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><b>Sirkuit</b> · Materi Informatika Kelas X / Fase E · Disusun oleh Ririn Nisfa Sholikhati, S.Pd.</div></footer>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+/* diagram */
+const N={input:['Input','Cara komputer menerima data dan perintah. Contoh: keyboard, mouse, scanner, microphone.'],
+cpu:['CPU','Menjalankan instruksi serta melakukan operasi aritmatika dan logika. Terdiri dari ALU, Control Unit, dan Register.'],
+memory:['Memori','Menyimpan data dan instruksi program. RAM menyimpan data sementara, ROM menyimpan instruksi dasar.'],
+output:['Output','Menampilkan hasil pemrosesan kepada pengguna. Contoh: monitor, printer, speaker.']};
+function pick(k){$$('.node').forEach(n=>n.classList.toggle('on',n.dataset.k===k));$('#tt').textContent=N[k][0];$('#td').textContent=N[k][1]}
+$$('.node').forEach(n=>{n.onclick=()=>pick(n.dataset.k);n.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick(n.dataset.k)}}});
+pick('cpu');
+
+/* tabs materi */
+const names=['Von Neumann','CPU','Memori','Input & Output','Siklus Instruksi','Sistem Operasi','Alur & Ringkasan'];
+const tabs=$('#tabs');
+names.forEach((n,i)=>{const b=document.createElement('button');b.textContent=n;b.setAttribute('role','tab');b.setAttribute('aria-selected',i===0);b.onclick=()=>{$$('button',tabs).forEach((x,j)=>x.setAttribute('aria-selected',i===j));$$('[data-p]').forEach(p=>p.hidden=+p.dataset.p!==i)};tabs.appendChild(b)});
+
+/* switch game */
+$$('.seg button').forEach(b=>b.onclick=()=>{$$('.seg button').forEach(x=>x.setAttribute('aria-selected',x===b));$('#quiz').hidden=b.dataset.g!=='quiz';$('#match').hidden=b.dataset.g!=='match'});
+
+/* kuis */
+const bank=[
+['Siapa tokoh yang namanya dipakai pada model arsitektur dasar komputer ini?',['John von Neumann','Alan Turing','Charles Babbage','Bill Gates'],'Model ini dirancang John von Neumann pada tahun 1945.'],
+['Alur dasar arsitektur Von Neumann yang benar adalah ...',['Input → CPU ↔ Memori → Output','Output → CPU → Input','Memori → Input → CPU','CPU → Output → Memori'],'Data masuk lewat input, diproses CPU dengan bantuan memori, lalu hasilnya keluar lewat output.'],
+['Bagian CPU yang melakukan perhitungan dan operasi logika adalah ...',['ALU','Control Unit','Register','ROM'],'ALU (Arithmetic Logic Unit) menghitung dan menjalankan operasi logika.'],
+['Tempat penyimpanan data kecil dan cepat di dalam CPU disebut ...',['Register','SSD','Monitor','ROM'],'Register berada di dalam CPU dan dipakai untuk informasi yang sedang diproses.'],
+['Apa yang terjadi pada data di RAM saat komputer dimatikan?',['Hilang','Tersimpan permanen','Pindah ke ROM','Menjadi instruksi dasar'],'RAM bersifat sementara, sehingga datanya hilang ketika komputer mati.'],
+['Instruksi dasar yang diperlukan saat komputer dinyalakan disimpan di ...',['ROM','RAM','Register','Printer'],'ROM bersifat nonvolatile dan menyimpan instruksi dasar.'],
+['Manakah yang termasuk perangkat output?',['Speaker','Scanner','Microphone','Mouse'],'Speaker menampilkan hasil berupa suara. Tiga lainnya adalah perangkat input.'],
+['Urutan siklus instruksi yang benar adalah ...',['Fetch → Decode → Execute','Decode → Fetch → Execute','Execute → Fetch → Decode','Fetch → Execute → Decode'],'CPU mengambil (fetch), menerjemahkan (decode), lalu menjalankan (execute) instruksi.'],
+['Kamu membuka game dan browser bersamaan. Fungsi OS yang mengatur program yang sedang berjalan adalah ...',['Manajemen proses','Manajemen file','Pengguna dan keamanan','Manajemen input/output'],'Manajemen proses mengatur penjadwalan dan eksekusi program yang berjalan.']
+];
+let qs,qi,sc,locked;
+const quiz=$('#quiz');
+function qStart(){qs=shuffle(bank).map(b=>({q:b[0],o:shuffle(b[1].map(t=>({t,c:t===b[1][0]}))),e:b[2]}));qi=0;sc=0;qShow()}
+function qShow(){
+  if(qi>=qs.length){const p=Math.round(sc/qs.length*100);
+    quiz.innerHTML=`<div class="big">${sc}/${qs.length}</div><h3>${p>=80?'Hebat, kamu paham arsitektur komputer!':p>=50?'Bagus, ulangi materinya sedikit lagi.':'Yuk baca materinya lagi lalu coba ulang.'}</h3><p class="fb">Skor kamu ${p}%.</p><button class="btn" id="again">Main lagi</button>`;
+    $('#again').onclick=qStart;return}
+  locked=false;const c=qs[qi];
+  quiz.innerHTML=`<div class="meta"><span>Soal ${qi+1} dari ${qs.length}</span><span>Skor ${sc}</span></div><div class="bar"><i style="width:${qi/qs.length*100}%"></i></div><p class="q">${c.q}</p><div id="os"></div><p class="fb" id="fb"></p><button class="btn" id="nx" hidden>${qi+1<qs.length?'Soal berikutnya':'Lihat hasil'}</button>`;
+  c.o.forEach(o=>{const b=document.createElement('button');b.className='opt';b.textContent=o.t;b.onclick=()=>{if(locked)return;locked=true;
+    $$('.opt').forEach((x,i)=>{x.disabled=true;if(c.o[i].c)x.classList.add('ok')});
+    if(o.c)sc++;else b.classList.add('no');
+    $('#fb').textContent=(o.c?'Benar. ':'Belum tepat. ')+c.e;$('#nx').hidden=false};$('#os').appendChild(b)});
+  $('#nx').onclick=()=>{qi++;qShow()};
+}
+qStart();
+
+/* pasangkan */
+const pairs=[['ALU','Menghitung dan melakukan operasi logika'],['Control Unit','Mengatur alur instruksi yang dijalankan'],['Register','Penyimpanan kecil dan cepat di dalam CPU'],['RAM','Menyimpan data sementara saat program berjalan'],['ROM','Menyimpan instruksi dasar yang nonvolatile'],['Sistem Operasi','Mengelola sumber daya dan menghubungkan pengguna dengan perangkat']];
+const mt=$('#match');let sl,sr,done,miss;
+function mStart(){sl=sr=null;done=0;miss=0;
+  mt.innerHTML=`<div class="meta"><span>Ketuk satu istilah, lalu ketuk fungsinya.</span><span id="ms"></span></div><div class="bar"><i id="mb" style="width:0"></i></div><div class="match" id="mg"></div><p class="fb" id="mf"></p>`;
+  const L=shuffle(pairs.map((p,i)=>[i,p[0]])),R=shuffle(pairs.map((p,i)=>[i,p[1]])),g=$('#mg');
+  for(let k=0;k<pairs.length;k++){
+    g.appendChild(mk(L[k],'t','l'));g.appendChild(mk(R[k],'','r'));
+  }
+  upd();
+}
+function mk(d,cls,side){const b=document.createElement('button');b.className=cls;b.textContent=d[1];b.dataset.i=d[0];b.dataset.s=side;b.onclick=()=>mc(b);return b}
+function upd(){$('#ms').textContent=`Salah ${miss}`;$('#mb').style.width=done/pairs.length*100+'%'}
+function mc(b){if(b.classList.contains('done'))return;
+  if(b.dataset.s==='l'){if(sl)sl.classList.remove('sel');sl=sl===b?null:b;if(sl)sl.classList.add('sel')}
+  else{if(sr)sr.classList.remove('sel');sr=sr===b?null:b;if(sr)sr.classList.add('sel')}
+  if(sl&&sr){const a=sl,c=sr;sl=sr=null;a.classList.remove('sel');c.classList.remove('sel');
+    if(a.dataset.i===c.dataset.i){a.classList.add('done');c.classList.add('done');done++;
+      if(done===pairs.length)$('#mf').innerHTML=`Semua cocok dengan ${miss} kesalahan. <button class="btn" id="mr" style="margin-left:8px">Main lagi</button>`,$('#mr').onclick=mStart}
+    else{miss++;[a,c].forEach(x=>{x.classList.add('bad');setTimeout(()=>x.classList.remove('bad'),400)})}
+    upd()}}
+mStart();
+</script>
+</body>
+</html>
